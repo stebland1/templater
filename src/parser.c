@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int is_processing_tag(ParserContext *ctx) { return ctx->tag_len > 0; }
-
 int is_opening_tag(char *p) {
   return *p && *p == '{' && *(p + 1) && *(p + 1) == '{';
 }

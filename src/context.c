@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO: separate some concerns.
+// File state: tag, tag_len, state <- these should refresh on every file.
+// Global state: outputbuf, submodule dir <- these should persist.
 int context_init(ParserContext *ctx, char *submodule_dir) {
   ctx->tag[0] = '\0';
   ctx->tag_len = 0;

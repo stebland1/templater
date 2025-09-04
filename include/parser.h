@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define MAX_FILE_PATH 64
+
 typedef enum {
   CTX_SCANNING,
   CTX_PARSING,

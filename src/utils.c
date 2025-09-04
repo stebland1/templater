@@ -1,6 +1,8 @@
 #include "utils.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 char *readfile(FILE *fp, size_t *out_len) {
   size_t buf_size = KB;
@@ -32,4 +34,30 @@ char *readfile(FILE *fp, size_t *out_len) {
   *out_len = total_read;
   buf[total_read] = '\0';
   return buf;
+}
+
+void trim_whitespace(char *str) {
+  if (str == NULL) {
+    return;
+  }
+
+  char *start = str;
+  char *end = str + strlen(str) - 1;
+
+  while (isspace(*start)) {
+    start++;
+  }
+
+  while (isspace(*end)) {
+    end--;
+  }
+
+  if (start > end) {
+    *str = '\0';
+    return;
+  }
+
+  *(end + 1) = '\0';
+  size_t n = ((end + 1) - start) + 1;
+  memmove(str, start, n);
 }

@@ -7,5 +7,6 @@
 #define KB 1024
 
 char *readfile(FILE *fp, size_t *out_len);
+void trim_whitespace(char *str);
 
 #endif

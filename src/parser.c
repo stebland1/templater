@@ -1,9 +1,12 @@
 #include "parser.h"
 #include "context.h"
 #include "utils.h"
+#include <ctype.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int is_opening_tag(char *p) {
   return *p && *p == '{' && *(p + 1) && *(p + 1) == '{';
@@ -54,6 +57,24 @@ char *handle_parse(ParserContext *ctx, char *p) {
       return NULL;
     }
 
+    char submodule_path[PATH_MAX];
+    trim_whitespace(ctx->tag);
+    size_t n = snprintf(submodule_path, sizeof(submodule_path), "%s/%s.html",
+                        ctx->submodule_dir, ctx->tag);
+    if (n < 0 || n >= PATH_MAX) {
+      fprintf(stderr, "The submodule path is too long, exceeding %d bytes\n",
+              PATH_MAX);
+      return NULL;
+    }
+
+    FILE *fp = fopen(submodule_path, "r");
+    if (!fp) {
+      perror("fopen");
+      fprintf(stderr, "Failure to open file at %s\n", submodule_path);
+      return NULL;
+    }
+
+    printf("Opened file at %s!\n", submodule_path);
     return p + 2;
   }
 

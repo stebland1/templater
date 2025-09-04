@@ -66,6 +66,7 @@ char *handle_parse(ParserContext *ctx, char *p) {
     ctx->state = CTX_SCANNING;
   }
 
+  ctx->tag[ctx->tag_len] = '\0';
   return p + 1;
 }
 

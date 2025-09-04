@@ -1,3 +1,4 @@
+#include "context.h"
 #include "parser.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -15,7 +16,13 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  if (parse_file(fp, argv[2]) < 0) {
+  ParserContext ctx;
+  if (context_init(&ctx, argv[2]) < 0) {
+    fprintf(stderr, "Failed to init parser context\n");
+    return -1;
+  }
+
+  if (parse_file(&ctx, fp) < 0) {
     return EXIT_FAILURE;
   }
 

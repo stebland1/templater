@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "context.h"
 #include "utils.h"
-#include <ctype.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -16,12 +15,12 @@ int is_closing_tag(char *p) {
   return *p && *p == '}' && *(p + 1) && *(p + 1) == '}';
 }
 
-char *handle_scan(ParserContext *ctx, char *p) {
+char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
   if (is_opening_tag(p)) {
-    ctx->state = CTX_PARSING;
+    fctx->state = CTX_PARSING;
     p += 2;
   } else {
-    if (output_buf_append_char(ctx, *p) < 0) {
+    if (output_buf_append_char(pctx, *p) < 0) {
       fprintf(stderr, "Failure to append character to output buf\n");
       return NULL;
     }
@@ -31,36 +30,35 @@ char *handle_scan(ParserContext *ctx, char *p) {
   return p;
 }
 
-int flush_tag_to_output_buf(ParserContext *ctx) {
+int flush_tag_to_output_buf(ParserContext *ctx, FileContext *fctx) {
   // TODO: there may be times where we want the suffix too.
   // Might need a rethink later. maybe a couple of bool flags.
   if (output_buf_append_str(ctx, "{{") < 0 ||
-      output_buf_append_str(ctx, ctx->tag) < 0) {
+      output_buf_append_str(ctx, fctx->tag) < 0) {
     return -1;
   }
 
-  ctx->tag[0] = '\0';
-  ctx->tag_len = 0;
+  fctx->tag[0] = '\0';
+  fctx->tag_len = 0;
   return 0;
 }
 
-char *handle_parse(ParserContext *ctx, char *p) {
+char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
   if (is_opening_tag(p)) {
-    ctx->tag[0] = '\0';
-    ctx->tag_len = 0;
+    fctx->tag[0] = '\0';
+    fctx->tag_len = 0;
     return p + 2;
   }
 
   if (is_closing_tag(p)) {
-    printf("Finding submodule %s\n", ctx->tag);
-    if (output_buf_append_str(ctx, "TAG GOES HERE!") < 0) {
+    if (output_buf_append_str(pctx, "TAG GOES HERE!") < 0) {
       return NULL;
     }
 
     char submodule_path[PATH_MAX];
-    trim_whitespace(ctx->tag);
+    trim_whitespace(fctx->tag);
     size_t n = snprintf(submodule_path, sizeof(submodule_path), "%s/%s.html",
-                        ctx->submodule_dir, ctx->tag);
+                        pctx->submodule_dir, fctx->tag);
     if (n < 0 || n >= PATH_MAX) {
       fprintf(stderr, "The submodule path is too long, exceeding %d bytes\n",
               PATH_MAX);
@@ -78,43 +76,42 @@ char *handle_parse(ParserContext *ctx, char *p) {
     return p + 2;
   }
 
-  ctx->tag[ctx->tag_len++] = *p;
-  if (ctx->tag_len >= TAG_CAPACITY - 1) {
-    if (flush_tag_to_output_buf(ctx) == -1) {
+  fctx->tag[fctx->tag_len++] = *p;
+  if (fctx->tag_len >= TAG_CAPACITY - 1) {
+    if (flush_tag_to_output_buf(pctx, fctx) == -1) {
       return NULL;
     }
 
-    ctx->state = CTX_SCANNING;
+    fctx->state = CTX_SCANNING;
   }
 
-  ctx->tag[ctx->tag_len] = '\0';
+  fctx->tag[fctx->tag_len] = '\0';
   return p + 1;
 }
 
-int parse_file(FILE *fp, char *submodule_dir) {
+int parse_file(ParserContext *pctx, FILE *fp) {
   size_t buf_len;
   char *buf = readfile(fp, &buf_len);
   if (!buf) {
     return -1;
   }
 
-  ParserContext ctx;
-  if (context_init(&ctx, submodule_dir) < 0) {
-    fprintf(stderr, "Failed to init context\n");
-    return -1;
-  }
+  FileContext fctx;
+  fctx.tag[0] = '\0';
+  fctx.tag_len = 0;
+  fctx.state = CTX_SCANNING;
 
   char *p = buf;
   while (*p) {
-    switch (ctx.state) {
+    switch (fctx.state) {
     case CTX_SCANNING:
-      p = handle_scan(&ctx, p);
+      p = handle_scan(pctx, &fctx, p);
       if (!p) {
         return -1;
       }
       break;
     case CTX_PARSING:
-      p = handle_parse(&ctx, p);
+      p = handle_parse(pctx, &fctx, p);
       if (!p) {
         return -1;
       }
@@ -122,8 +119,7 @@ int parse_file(FILE *fp, char *submodule_dir) {
     }
   }
 
-  printf("Parsing file...\n");
-  printf("Output: %s\n", ctx.outputbuf.buf);
+  printf("Output: %s\n", pctx->ob.buf);
   fclose(fp);
   return 0;
 }

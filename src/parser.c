@@ -51,10 +51,6 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
   }
 
   if (is_closing_tag(p)) {
-    if (output_buf_append_str(pctx, "TAG GOES HERE!") < 0) {
-      return NULL;
-    }
-
     char submodule_path[PATH_MAX];
     trim_whitespace(fctx->tag);
     size_t n = snprintf(submodule_path, sizeof(submodule_path), "%s/%s.html",
@@ -72,7 +68,13 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
       return NULL;
     }
 
-    printf("Opened file at %s!\n", submodule_path);
+    if (parse_file(pctx, fp) < 0) {
+      // TODO: safely recover by dumping the tag buffer into the OB.
+      // this time I'll need the suffix.
+    }
+
+    fclose(fp);
+    fctx->state = CTX_SCANNING;
     return p + 2;
   }
 
@@ -95,6 +97,9 @@ int parse_file(ParserContext *pctx, FILE *fp) {
   if (!buf) {
     return -1;
   }
+
+  // TODO: do this properly. trimming prefixed whitespace isn't necessary.
+  trim_whitespace(buf);
 
   FileContext fctx;
   fctx.tag[0] = '\0';
@@ -119,7 +124,6 @@ int parse_file(ParserContext *pctx, FILE *fp) {
     }
   }
 
-  printf("Output: %s\n", pctx->ob.buf);
   fclose(fp);
   return 0;
 }

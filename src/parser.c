@@ -48,6 +48,11 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
 
   if (is_closing_tag(p)) {
     char submodule_path[PATH_MAX];
+    // here we know the output buffer is only MAX_TAG_LEN
+    // this needs to create a new tag, and then release it once done.
+    // because the submodule path needs to be built without spaces.
+    // and if failure, we need to restore the tag text as it was. With the
+    // spaces.
     trim_whitespace(fctx->tag);
     size_t n = snprintf(submodule_path, sizeof(submodule_path), "%s/%s.html",
                         pctx->submodule_dir, fctx->tag);

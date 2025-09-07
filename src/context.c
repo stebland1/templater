@@ -62,3 +62,9 @@ int ob_append_str(ParserContext *pctx, char *str) {
   pctx->ob.buf[pctx->ob.len] = '\0';
   return 0;
 }
+
+void init_file_context(FileContext *fctx) {
+  fctx->tag[0] = '\0';
+  fctx->tag_len = 0;
+  fctx->state = CTX_SCANNING;
+}

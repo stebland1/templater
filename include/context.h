@@ -31,5 +31,6 @@ int parse_context_init(ParserContext *pctx, char *submodule_dir);
 int ob_append_str(ParserContext *pctx, char *str);
 int ob_append_char(ParserContext *pctx, char c);
 int ob_resize(ParserContext *pctx);
+void init_file_context(FileContext *fctx);
 
 #endif

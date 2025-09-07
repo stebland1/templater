@@ -113,9 +113,7 @@ int parse_file(ParserContext *pctx, FILE *fp) {
   trim_whitespace(buf);
 
   FileContext fctx;
-  fctx.tag[0] = '\0';
-  fctx.tag_len = 0;
-  fctx.state = CTX_SCANNING;
+  init_file_context(&fctx);
 
   char *p = buf;
   while (*p) {

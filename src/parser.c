@@ -92,6 +92,11 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
   return p + 1;
 }
 
+/*
+ * The parsing entry point.
+ *
+ * Handles the reading of the file to parse and looping over chars.
+ */
 int parse_file(ParserContext *pctx, FILE *fp) {
   size_t buf_len;
   char *buf = readfile(fp, &buf_len);

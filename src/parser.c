@@ -7,13 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-int is_opening_tag(char *p) {
-  return *p && *p == '{' && *(p + 1) && *(p + 1) == '{';
-}
+int is_opening_tag(char *p) { return *p == '{' && *(p + 1) == '{'; }
 
-int is_closing_tag(char *p) {
-  return *p && *p == '}' && *(p + 1) && *(p + 1) == '}';
-}
+int is_closing_tag(char *p) { return *p == '}' && *(p + 1) == '}'; }
 
 char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
   if (is_opening_tag(p)) {

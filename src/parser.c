@@ -64,9 +64,12 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
 
     FILE *fp = fopen(submodule_path, "r");
     if (!fp) {
-      perror("fopen");
-      fprintf(stderr, "Failure to open file at %s\n", submodule_path);
-      return NULL;
+      if (flush_tag_to_output_buf(pctx, fctx) < 0) {
+        fprintf(stderr, "Failure flushing tag to out buf\n");
+        return NULL;
+      }
+
+      return p + 2;
     }
 
     if (parse_file(pctx, fp) < 0) {

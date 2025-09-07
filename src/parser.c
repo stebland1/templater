@@ -26,11 +26,11 @@ char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
   return p;
 }
 
-int flush_tag_to_output_buf(ParserContext *ctx, FileContext *fctx) {
+int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
   // TODO: there may be times where we want the suffix too.
   // Might need a rethink later. maybe a couple of bool flags.
-  if (output_buf_append_str(ctx, "{{") < 0 ||
-      output_buf_append_str(ctx, fctx->tag) < 0) {
+  if (output_buf_append_str(pctx, "{{") < 0 ||
+      output_buf_append_str(pctx, fctx->tag) < 0) {
     return -1;
   }
 

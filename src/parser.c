@@ -11,12 +11,15 @@ int is_opening_tag(char *p) { return *p == '{' && *(p + 1) == '{'; }
 
 int is_closing_tag(char *p) { return *p == '}' && *(p + 1) == '}'; }
 
+/*
+ * Handles the scanning of the file for opening tags `{{`.
+ */
 char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
   if (is_opening_tag(p)) {
     fctx->state = CTX_PARSING;
     p += 2;
   } else {
-    if (output_buf_append_char(pctx, *p) < 0) {
+    if (ob_append_char(pctx, *p) < 0) {
       fprintf(stderr, "Failure to append character to output buf\n");
       return NULL;
     }
@@ -29,8 +32,7 @@ char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
 int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
   // TODO: there may be times where we want the suffix too.
   // Might need a rethink later. maybe a couple of bool flags.
-  if (output_buf_append_str(pctx, "{{") < 0 ||
-      output_buf_append_str(pctx, fctx->tag) < 0) {
+  if (ob_append_str(pctx, "{{") < 0 || ob_append_str(pctx, fctx->tag) < 0) {
     return -1;
   }
 
@@ -39,7 +41,7 @@ int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
   return 0;
 }
 
-char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
+char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
   if (is_opening_tag(p)) {
     fctx->tag[0] = '\0';
     fctx->tag_len = 0;
@@ -82,7 +84,6 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
     return p + 2;
   }
 
-  fctx->tag[fctx->tag_len++] = *p;
   if (fctx->tag_len >= TAG_CAPACITY - 1) {
     if (flush_tag_to_output_buf(pctx, fctx) == -1) {
       return NULL;
@@ -91,6 +92,7 @@ char *handle_parse(ParserContext *pctx, FileContext *fctx, char *p) {
     fctx->state = CTX_SCANNING;
   }
 
+  fctx->tag[fctx->tag_len++] = *p;
   fctx->tag[fctx->tag_len] = '\0';
   return p + 1;
 }
@@ -125,7 +127,7 @@ int parse_file(ParserContext *pctx, FILE *fp) {
       }
       break;
     case CTX_PARSING:
-      p = handle_parse(pctx, &fctx, p);
+      p = handle_parse_tag(pctx, &fctx, p);
       if (!p) {
         return -1;
       }

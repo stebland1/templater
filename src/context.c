@@ -8,58 +8,57 @@
 // TODO: separate some concerns.
 // File state: tag, tag_len, state <- these should refresh on every file.
 // Global state: outputbuf, submodule dir <- these should persist.
-int context_init(ParserContext *ctx, char *submodule_dir) {
-  ctx->ob.buf = malloc(KB * 4);
-  if (!ctx->ob.buf) {
+int parse_context_init(ParserContext *pctx, char *submodule_dir) {
+  pctx->ob.buf = malloc(KB * 4);
+  if (!pctx->ob.buf) {
     perror("malloc");
     return -1;
   }
 
-  ctx->ob.len = 0;
-  ctx->ob.capacity = KB * 4;
+  pctx->ob.len = 0;
+  pctx->ob.capacity = KB * 4;
 
-  ctx->submodule_dir = strdup(submodule_dir);
-  if (!ctx->submodule_dir) {
+  pctx->submodule_dir = strdup(submodule_dir);
+  if (!pctx->submodule_dir) {
     perror("strdup");
-    free(ctx->ob.buf);
+    free(pctx->ob.buf);
     return -1;
   }
 
   return 0;
 }
 
-int output_buf_resize(ParserContext *ctx) {
-  size_t new_capacity = ctx->ob.capacity + KB * 4;
-  char *new_buf = realloc(ctx->ob.buf, new_capacity);
+int ob_resize(ParserContext *pctx) {
+  size_t new_capacity = pctx->ob.capacity + KB * 4;
+  char *new_buf = realloc(pctx->ob.buf, new_capacity);
   if (!new_buf) {
     perror("realloc");
     return -1;
   }
 
-  ctx->ob.capacity = new_capacity;
-  ctx->ob.buf = new_buf;
+  pctx->ob.capacity = new_capacity;
+  pctx->ob.buf = new_buf;
   return 0;
 }
 
-int output_buf_append_char(ParserContext *ctx, char c) {
-  if (ctx->ob.capacity - ctx->ob.len - 1 <= 0 && output_buf_resize(ctx) < 0) {
+int ob_append_char(ParserContext *pctx, char c) {
+  if (pctx->ob.capacity - pctx->ob.len - 1 <= 0 && ob_resize(pctx) < 0) {
     return -1;
   }
 
-  ctx->ob.buf[ctx->ob.len++] = c;
-  ctx->ob.buf[ctx->ob.len] = '\0';
+  pctx->ob.buf[pctx->ob.len++] = c;
+  pctx->ob.buf[pctx->ob.len] = '\0';
   return 0;
 }
 
-int output_buf_append_str(ParserContext *ctx, char *str) {
+int ob_append_str(ParserContext *pctx, char *str) {
   size_t str_len = strlen(str);
-  if (ctx->ob.capacity - ctx->ob.len - 1 < str_len &&
-      output_buf_resize(ctx) < 0) {
+  if (pctx->ob.capacity - pctx->ob.len - 1 < str_len && ob_resize(pctx) < 0) {
     return -1;
   }
 
-  memcpy(ctx->ob.buf + ctx->ob.len, str, str_len);
-  ctx->ob.len += str_len;
-  ctx->ob.buf[ctx->ob.len] = '\0';
+  memcpy(pctx->ob.buf + pctx->ob.len, str, str_len);
+  pctx->ob.len += str_len;
+  pctx->ob.buf[pctx->ob.len] = '\0';
   return 0;
 }

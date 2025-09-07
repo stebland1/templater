@@ -27,8 +27,9 @@ typedef struct {
   char *submodule_dir;
 } ParserContext;
 
-int context_init(ParserContext *ctx, char *submodule_dir);
-int output_buf_append_str(ParserContext *ctx, char *str);
-int output_buf_append_char(ParserContext *ctx, char c);
+int parse_context_init(ParserContext *pctx, char *submodule_dir);
+int ob_append_str(ParserContext *pctx, char *str);
+int ob_append_char(ParserContext *pctx, char c);
+int ob_resize(ParserContext *pctx);
 
 #endif

@@ -116,7 +116,7 @@ char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
   }
 
   if (is_closing_tag(p)) {
-    return resolve_tag(pctx, fctx) == 0 ? p + 2 : NULL;
+    return resolve_tag(pctx, fctx) == -1 ? NULL : p + 2;
   }
 
   if (fctx->tag_len >= TAG_CAPACITY - 1) {

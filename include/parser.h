@@ -7,6 +7,12 @@
 
 #define MAX_FILE_PATH 64
 
+typedef enum {
+  TR_SUCCESS = 0,
+  TR_FAILURE = -1,
+  TR_RECOVER = 1,
+} ResolveTagResult;
+
 int is_opening_tag(char *p);
 int is_closing_tag(char *p);
 char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p);

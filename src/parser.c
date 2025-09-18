@@ -75,14 +75,11 @@ FILE *open_submodule_file(FILE *fp, ParserContext *pctx, FileContext *fctx) {
   return fp;
 }
 
-// 0 == SUCCESS
-// -1 == CANNOT RECOVER, ABANDON SHIP.
-// 1 == RECOVER BY PUSHING TAG TO OB.
-int resolve_tag(ParserContext *pctx, FileContext *fctx) {
+ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx) {
   char submodule_path[PATH_MAX];
   if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) == NULL) {
     // recover by inserting the tag back.
-    return 1;
+    return TR_RECOVER;
   }
 
   FILE *fp = NULL;
@@ -90,12 +87,12 @@ int resolve_tag(ParserContext *pctx, FileContext *fctx) {
     if (flush_tag_to_output_buf(pctx, fctx) < 0) {
       fprintf(stderr, "Failure flushing tag to out buf\n");
       // memory error, we can't recover.
-      return -1;
+      return TR_FAILURE;
     }
 
     // recover by inserting the tag back.
     // we'll need to insert the }}
-    return 1;
+    return TR_RECOVER;
   }
 
   if (parse_file(pctx, fp) < 0) {
@@ -105,7 +102,7 @@ int resolve_tag(ParserContext *pctx, FileContext *fctx) {
 
   fclose(fp);
   fctx->state = CTX_SCANNING;
-  return 0;
+  return TR_SUCCESS;
 }
 
 char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
@@ -116,7 +113,7 @@ char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
   }
 
   if (is_closing_tag(p)) {
-    return resolve_tag(pctx, fctx) == -1 ? NULL : p + 2;
+    return resolve_tag(pctx, fctx) == TR_FAILURE ? NULL : p + 2;
   }
 
   if (fctx->tag_len >= TAG_CAPACITY - 1) {

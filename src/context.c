@@ -1,9 +1,12 @@
 #include "context.h"
 #include "utils.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+int is_whitespace_or_slash(char c) { return isspace(c) || c == '/'; }
 
 // TODO: separate some concerns.
 // File state: tag, tag_len, state <- these should refresh on every file.
@@ -18,6 +21,7 @@ int parse_context_init(ParserContext *pctx, char *submodule_dir) {
   pctx->ob.len = 0;
   pctx->ob.capacity = KB * 4;
 
+  trim(submodule_dir, is_whitespace_or_slash);
   pctx->submodule_dir = strdup(submodule_dir);
   if (!pctx->submodule_dir) {
     perror("strdup");

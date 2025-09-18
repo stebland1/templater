@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   }
 
   ParserContext ctx;
-  if (context_init(&ctx, argv[2]) < 0) {
+  if (parse_context_init(&ctx, argv[2]) < 0) {
     fprintf(stderr, "Failed to init parser context\n");
     return -1;
   }

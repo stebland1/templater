@@ -36,7 +36,7 @@ char *readfile(FILE *fp, size_t *out_len) {
   return buf;
 }
 
-void trim_whitespace(char *str) {
+void trim(char *str, TrimPredicate should_trim) {
   if (str == NULL) {
     return;
   }
@@ -44,11 +44,11 @@ void trim_whitespace(char *str) {
   char *start = str;
   char *end = str + strlen(str) - 1;
 
-  while (isspace(*start)) {
+  while (should_trim(*start)) {
     start++;
   }
 
-  while (isspace(*end)) {
+  while (should_trim(*end)) {
     end--;
   }
 
@@ -59,5 +59,7 @@ void trim_whitespace(char *str) {
 
   *(end + 1) = '\0';
   size_t n = ((end + 1) - start) + 1;
-  memmove(str, start, n);
+  if (str != start) {
+    memmove(str, start, n);
+  }
 }

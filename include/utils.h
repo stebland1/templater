@@ -6,7 +6,9 @@
 
 #define KB 1024
 
+typedef int (*TrimPredicate)(char c);
+
 char *readfile(FILE *fp, size_t *out_len);
-void trim_whitespace(char *str);
+void trim(char *str, TrimPredicate should_trim);
 
 #endif

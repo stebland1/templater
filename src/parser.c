@@ -92,6 +92,7 @@ ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx) {
 
     // recover by inserting the tag back.
     // we'll need to insert the }}
+    fctx->state = CTX_SCANNING;
     return TR_RECOVER;
   }
 

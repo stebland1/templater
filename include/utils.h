@@ -9,6 +9,7 @@
 typedef int (*TrimPredicate)(char c);
 
 char *readfile(FILE *fp, size_t *out_len);
-void trim(char *str, TrimPredicate should_trim);
+char *trim(char *str, TrimPredicate should_trim);
+void trim_in_place(char *str, TrimPredicate should_trim);
 
 #endif

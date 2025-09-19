@@ -21,7 +21,7 @@ int parse_context_init(ParserContext *pctx, char *submodule_dir) {
   pctx->ob.len = 0;
   pctx->ob.capacity = KB * 4;
 
-  trim(submodule_dir, is_whitespace_or_slash);
+  trim_in_place(submodule_dir, is_whitespace_or_slash);
   pctx->submodule_dir = strdup(submodule_dir);
   if (!pctx->submodule_dir) {
     perror("strdup");

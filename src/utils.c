@@ -1,5 +1,4 @@
 #include "utils.h"
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +35,58 @@ char *readfile(FILE *fp, size_t *out_len) {
   return buf;
 }
 
-void trim(char *str, TrimPredicate should_trim) {
+char *trim(char *str, TrimPredicate should_trim) {
+  if (!str) {
+    return NULL;
+  }
+
+  char *start = str;
+  while (should_trim(*start)) {
+    start++;
+  }
+
+  if (*start == '\0') {
+    char *empty = malloc(1);
+    if (!empty) {
+      perror("malloc");
+      return NULL;
+    }
+    empty[0] = '\0';
+    return empty;
+  }
+
+  char *end = start + strlen(start) - 1;
+  while (should_trim(*end)) {
+    end--;
+  }
+
+  size_t len = end - start + 1;
+  char *out = malloc(len + 1);
+  if (!out) {
+    perror("malloc");
+    return NULL;
+  }
+
+  memcpy(out, start, len);
+  out[len] = '\0';
+  return out;
+}
+
+/*
+ * TODO: I'm going to need a trim in place and a trim and copy function.
+ *
+ * The trim and copy function. is going to need to return a pointer to the
+ * beginning of the newly created string.
+ *
+ * As this is going to be generic, then we'll need to allocate memory. As
+ * there's no way of knowing the size of the string to be copied. unless it's
+ * supplied.
+ *
+ * We either allocate memory, or take in an output buffer and an `n`.
+ *
+ * The problem with the latter approach is that the
+ */
+void trim_in_place(char *str, TrimPredicate should_trim) {
   if (str == NULL) {
     return;
   }

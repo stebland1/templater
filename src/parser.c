@@ -45,53 +45,38 @@ int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
   return 0;
 }
 
-char *build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
-                           FileContext *fctx) {
-  // here we know the output buffer is only MAX_TAG_LEN
-  // this needs to create a new tag, and then release it once done.
-  // because the submodule path needs to be built without spaces.
-  // and if failure, we need to restore the tag text as it was. With the
-  // spaces.
-  trim(fctx->tag, is_whitespace);
+int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
+                         FileContext *fctx) {
+  char *trimmed_tag = trim(fctx->tag, is_whitespace);
+  if (!trimmed_tag) {
+    return -1;
+  }
+
   size_t n =
-      snprintf(buf, buf_len, "%s/%s.html", pctx->submodule_dir, fctx->tag);
+      snprintf(buf, buf_len, "%s/%s.html", pctx->submodule_dir, trimmed_tag);
+  free(trimmed_tag);
   if (n < 0 || n >= PATH_MAX) {
     fprintf(stderr, "The submodule path is too long, exceeding %d bytes\n",
             PATH_MAX);
-    return NULL;
+    return -1;
   }
 
-  return buf;
-}
-
-FILE *open_submodule_file(FILE *fp, ParserContext *pctx, FileContext *fctx) {
-  // here we open the submodule file and return back the file pointer.
-  char submodule_path[PATH_MAX];
-  if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) == NULL) {
-    return NULL;
-  }
-
-  fp = fopen(submodule_path, "r");
-  return fp;
+  return 0;
 }
 
 ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx) {
   char submodule_path[PATH_MAX];
-  if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) == NULL) {
-    // recover by inserting the tag back.
+  if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) < 0) {
     return TR_RECOVER;
   }
 
-  FILE *fp = NULL;
-  if ((fp = open_submodule_file(fp, pctx, fctx)) == NULL) {
+  FILE *fp = fopen(submodule_path, "r");
+  if (!fp) {
     if (flush_tag_to_output_buf(pctx, fctx) < 0) {
       fprintf(stderr, "Failure flushing tag to out buf\n");
-      // memory error, we can't recover.
       return TR_FAILURE;
     }
 
-    // recover by inserting the tag back.
-    // we'll need to insert the }}
     fctx->state = CTX_SCANNING;
     return TR_RECOVER;
   }
@@ -143,7 +128,7 @@ int parse_file(ParserContext *pctx, FILE *fp) {
   }
 
   // TODO: do this properly. trimming prefixed whitespace isn't necessary.
-  trim(buf, is_whitespace);
+  trim_in_place(buf, is_whitespace);
 
   FileContext fctx;
   init_file_context(&fctx);

@@ -19,5 +19,7 @@ char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p);
 char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p);
 int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx);
 int parse_file(ParserContext *pctx, FILE *fp);
-
+ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx);
+int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
+                         FileContext *fctx);
 #endif

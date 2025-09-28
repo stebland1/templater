@@ -33,10 +33,7 @@ char *handle_scan(ParserContext *pctx, FileContext *fctx, char *p) {
 }
 
 int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
-  // TODO: there may be times where we want the suffix too.
-  // Might need a rethink later. maybe a couple of bool flags.
   if (ob_append_str(pctx, "{{") < 0 || ob_append_str(pctx, fctx->tag) < 0) {
-    // memory error, we can't recover.
     return -1;
   }
 
@@ -64,26 +61,23 @@ int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
   return 0;
 }
 
-ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx) {
+/*
+ * Here, a potential tag has been found.
+ * Try to open the file associated, and parse it.
+ */
+int resolve_tag(ParserContext *pctx, FileContext *fctx) {
   char submodule_path[PATH_MAX];
   if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) < 0) {
-    return TR_RECOVER;
+    return -1;
   }
 
   FILE *fp = fopen(submodule_path, "r");
   if (!fp) {
-    if (flush_tag_to_output_buf(pctx, fctx) < 0) {
-      fprintf(stderr, "Failure flushing tag to out buf\n");
-      return TR_FAILURE;
-    }
-
-    fctx->state = CTX_SCANNING;
-    return TR_RECOVER;
+    return -1;
   }
 
   if (parse_file(pctx, fp) < 0) {
-    // TODO: safely recover by dumping the tag buffer into the OB.
-    // this time I'll need the suffix.
+    return -1;
   }
 
   fclose(fp);
@@ -91,28 +85,71 @@ ResolveTagResult resolve_tag(ParserContext *pctx, FileContext *fctx) {
   return TR_SUCCESS;
 }
 
-char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
-  if (is_opening_tag(p)) {
-    fctx->tag[0] = '\0';
-    fctx->tag_len = 0;
-    return p + 2;
+/*
+ * Empties out the tag currently being parsed.
+ *
+ * Useful if we encounter another opening tag sequence `{{`.
+ * This means we need to scrap what we currently have.
+ */
+char *reset_tag(char *p, FileContext *fctx) {
+  fctx->tag[0] = '\0';
+  fctx->tag_len = 0;
+  return p + 2;
+}
+
+char *handle_closing_tag(char *p, ParserContext *pctx, FileContext *fctx) {
+  if (resolve_tag(pctx, fctx) < 0) {
+    if (flush_tag_to_output_buf(pctx, fctx) < 0) {
+      fprintf(stderr, "Failure to flush tag `%s` to output buffer\n",
+              fctx->tag);
+      return NULL;
+    }
+
+    fprintf(stderr, "Failure to resolve tag `%s`, proceeding...\n", fctx->tag);
+    fctx->state = CTX_SCANNING;
+    return p;
   }
 
-  if (is_closing_tag(p)) {
-    return resolve_tag(pctx, fctx) == TR_FAILURE ? NULL : p + 2;
-  }
+  fctx->state = CTX_SCANNING;
+  /* We've successfully resolved the tag, skip over the closing tag */
+  return p + 2;
+}
 
+char *handle_parse_tag_char(char *p, ParserContext *pctx, FileContext *fctx) {
   if (fctx->tag_len >= TAG_CAPACITY - 1) {
+    printf("We've exceeded the tag capacity with tag `%s`, len of %zu\n",
+           fctx->tag, fctx->tag_len);
     if (flush_tag_to_output_buf(pctx, fctx) == -1) {
+      fprintf(stderr, "Failure flushing tag to out buf\n");
       return NULL;
     }
 
     fctx->state = CTX_SCANNING;
+    return p;
   }
 
   fctx->tag[fctx->tag_len++] = *p;
   fctx->tag[fctx->tag_len] = '\0';
   return p + 1;
+}
+
+/*
+ * When parsing, there's 3 cases.
+ *
+ * 1. We're on an opening tag {{.
+ * 2. We're on a closing tag }}.
+ * 3. It's a regular character, and part of the tag being built.
+ */
+char *handle_parse_tag(ParserContext *pctx, FileContext *fctx, char *p) {
+  if (is_opening_tag(p)) {
+    return reset_tag(p, fctx);
+  }
+
+  if (is_closing_tag(p)) {
+    return handle_closing_tag(p, pctx, fctx);
+  }
+
+  return handle_parse_tag_char(p, pctx, fctx);
 }
 
 /*

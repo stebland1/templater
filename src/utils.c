@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Reads from the passed in file descriptor and puts into an allocated buffer.
+ *
+ * Returns said buffer, responsibility of freeing this resource is left up to
+ * the caller.
+ */
 char *readfile(FILE *fp, size_t *out_len) {
   size_t buf_size = KB;
   char *buf = malloc(buf_size);

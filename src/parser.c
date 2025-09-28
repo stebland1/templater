@@ -151,6 +151,7 @@ int parse_file(ParserContext *pctx, FILE *fp) {
     }
   }
 
+  free(buf);
   fclose(fp);
   return 0;
 }

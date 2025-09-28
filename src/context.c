@@ -8,9 +8,16 @@
 
 int is_whitespace_or_slash(char c) { return isspace(c) || c == '/'; }
 
-// TODO: separate some concerns.
-// File state: tag, tag_len, state <- these should refresh on every file.
-// Global state: outputbuf, submodule dir <- these should persist.
+/*
+ * This is in charge of initialising the parser context structure.
+ *
+ * Containing:
+ * 1. output buffer
+ * 2. submodule_dir -> passed from cli args.
+ *
+ * It passes up the responsibility of freeing the memory associated with both of
+ * the above.
+ */
 int parse_context_init(ParserContext *pctx, char *submodule_dir) {
   pctx->ob.buf = malloc(KB * 4);
   if (!pctx->ob.buf) {
@@ -30,6 +37,18 @@ int parse_context_init(ParserContext *pctx, char *submodule_dir) {
   }
 
   return 0;
+}
+
+/*
+ * This should be called on termination of the program, to clean up resources
+ * associated with the Parser Context structure.
+ */
+void parse_context_destroy(ParserContext *pctx) {
+  free(pctx->ob.buf);
+  pctx->ob.buf = NULL;
+  pctx->ob.len = 0;
+  pctx->ob.capacity = 0;
+  free(pctx->submodule_dir);
 }
 
 int ob_resize(ParserContext *pctx) {

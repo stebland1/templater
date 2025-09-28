@@ -16,15 +16,16 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  ParserContext ctx;
-  if (parse_context_init(&ctx, argv[2]) < 0) {
+  ParserContext pctx;
+  if (parse_context_init(&pctx, argv[2]) < 0) {
     fprintf(stderr, "Failed to init parser context\n");
     return -1;
   }
 
-  if (parse_file(&ctx, fp) < 0) {
+  if (parse_file(&pctx, fp) < 0) {
     return EXIT_FAILURE;
   }
 
+  parse_context_destroy(&pctx);
   return EXIT_SUCCESS;
 }

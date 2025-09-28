@@ -32,5 +32,6 @@ int ob_append_str(ParserContext *pctx, char *str);
 int ob_append_char(ParserContext *pctx, char c);
 int ob_resize(ParserContext *pctx);
 void init_file_context(FileContext *fctx);
+void parse_context_destroy(ParserContext *pctx);
 
 #endif

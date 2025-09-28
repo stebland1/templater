@@ -87,7 +87,6 @@ int ob_append_str(ParserContext *pctx, char *str) {
 }
 
 void init_file_context(FileContext *fctx) {
-  fctx->tag[0] = '\0';
-  fctx->tag_len = 0;
+  memset(fctx, 0, sizeof(FileContext));
   fctx->state = CTX_SCANNING;
 }

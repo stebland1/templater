@@ -78,20 +78,6 @@ char *trim(char *str, TrimPredicate should_trim) {
   return out;
 }
 
-/*
- * TODO: I'm going to need a trim in place and a trim and copy function.
- *
- * The trim and copy function. is going to need to return a pointer to the
- * beginning of the newly created string.
- *
- * As this is going to be generic, then we'll need to allocate memory. As
- * there's no way of knowing the size of the string to be copied. unless it's
- * supplied.
- *
- * We either allocate memory, or take in an output buffer and an `n`.
- *
- * The problem with the latter approach is that the
- */
 void trim_in_place(char *str, TrimPredicate should_trim) {
   if (str == NULL) {
     return;

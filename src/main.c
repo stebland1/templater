@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  printf("%s\n", pctx.ob.buf);
   parse_context_destroy(&pctx);
   return EXIT_SUCCESS;
 }

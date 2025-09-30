@@ -23,11 +23,15 @@ char *readfile(FILE *fp, size_t *out_len) {
     total_read += n;
 
     if (total_read == buf_size) {
-      char *newbuf = realloc(buf, buf_size + KB);
+      size_t newbuf_size = buf_size + KB;
+      char *newbuf = realloc(buf, newbuf_size);
       if (!newbuf) {
         free(buf);
         return NULL;
       }
+
+      buf = newbuf;
+      buf_size = newbuf_size;
     }
   }
 

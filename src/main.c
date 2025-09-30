@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
   }
 
   if (parse_file(&pctx, fp) < 0) {
+    parse_context_destroy(&pctx);
     return EXIT_FAILURE;
   }
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int is_opening_tag(char *p) { return *p == '{' && *(p + 1) == '{'; }
 
@@ -43,12 +44,7 @@ int flush_tag_to_output_buf(ParserContext *pctx, FileContext *fctx) {
 }
 
 int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
-                         FileContext *fctx) {
-  char *trimmed_tag = trim(fctx->tag, is_whitespace);
-  if (!trimmed_tag) {
-    return -1;
-  }
-
+                         char *trimmed_tag) {
   size_t n =
       snprintf(buf, buf_len, "%s/%s.html", pctx->submodule_dir, trimmed_tag);
   free(trimmed_tag);
@@ -66,16 +62,32 @@ int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
  * Try to open the file associated, and parse it.
  */
 int resolve_tag(ParserContext *pctx, FileContext *fctx) {
-  char submodule_path[PATH_MAX];
-  if (build_submodule_path(submodule_path, PATH_MAX, pctx, fctx) < 0) {
+  char *trimmed_tag = trim(fctx->tag, is_whitespace);
+  if (!trimmed_tag) {
     return -1;
   }
 
-  FILE *fp = fopen(submodule_path, "r");
+  FILE *fp = NULL;
+  if (strcmp(trimmed_tag, BODY_TAG) == 0) {
+    if (isatty(STDIN_FILENO)) {
+      fprintf(stderr, "stdin is a terminal — no piped input detected.\n");
+      return -1;
+    }
+    fp = stdin;
+    goto parse;
+  }
+
+  char submodule_path[PATH_MAX];
+  if (build_submodule_path(submodule_path, PATH_MAX, pctx, trimmed_tag) < 0) {
+    return -1;
+  }
+
+  fp = fopen(submodule_path, "r");
   if (!fp) {
     return -1;
   }
 
+parse:
   if (parse_file(pctx, fp) < 0) {
     return -1;
   }

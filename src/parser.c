@@ -86,6 +86,7 @@ int resolve_tag(ParserContext *pctx, FileContext *fctx) {
 
   fp = fopen(submodule_path, "r");
   if (!fp) {
+    fprintf(stderr, "Failed to open file %s\n", submodule_path);
     return -1;
   }
 

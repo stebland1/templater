@@ -115,13 +115,15 @@ char *reset_tag(char *p, FileContext *fctx) {
 
 char *handle_closing_tag(char *p, ParserContext *pctx, FileContext *fctx) {
   if (resolve_tag(pctx, fctx) < 0) {
+    fprintf(stderr, "Failure to resolve tag `%s`, Attempting to proceed...\n",
+            fctx->tag);
+
     if (flush_tag_to_output_buf(pctx, fctx) < 0) {
       fprintf(stderr, "Failure to flush tag `%s` to output buffer\n",
               fctx->tag);
       return NULL;
     }
 
-    fprintf(stderr, "Failure to resolve tag `%s`, proceeding...\n", fctx->tag);
     fctx->state = CTX_SCANNING;
     return p;
   }

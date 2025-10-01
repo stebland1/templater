@@ -62,6 +62,8 @@ int build_submodule_path(char *buf, size_t buf_len, ParserContext *pctx,
  * Try to open the file associated, and parse it.
  */
 int resolve_tag(ParserContext *pctx, FileContext *fctx) {
+  fctx->tag[fctx->tag_len] = '\0';
+
   char *trimmed_tag = trim(fctx->tag, is_whitespace);
   if (!trimmed_tag) {
     return -1;
@@ -94,6 +96,8 @@ parse:
 
   fclose(fp);
   fctx->state = CTX_SCANNING;
+  fctx->tag[0] = '\0';
+  fctx->tag_len = 0;
   return TR_SUCCESS;
 }
 
